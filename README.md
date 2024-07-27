@@ -1,27 +1,151 @@
-# SecureApp
+# Secure Angular Application
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 18.0.7.
+Este proyecto demuestra cómo crear una aplicación Angular segura con rutas protegidas y autenticación.
 
-## Development server
+## Configuración del Proyecto
+1. **Instalar Angular CLI:**
+   ```sh
+   npm install -g @angular/cli
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
 
-## Code scaffolding
+Crear un nuevo proyecto:
+    ng new secureApp
+    cd secureApp
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+Generar los archivos necesarios:
+    ng generate service services/auth
+    ng generate guard guards/auth
+    ng generate component components/public
+    ng generate component components/protected
 
-## Build
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+Servicio de Autenticación
+Implementado en src/app/services/auth.service.ts para manejar el inicio de sesión y el estado de autenticación.
 
-## Running unit tests
+auth.service.ts
+export class AuthService {
+  private isAuthenticatedFlag = false;
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+  login(username: string, password: string): Observable<boolean> {
+    if (username === 'user' && password === 'password') {
+      this.isAuthenticatedFlag = true;
+      return of(true);
+    } else {
+      return of(false);
+    }
+  }
 
-## Running end-to-end tests
+  isAuthenticated(): boolean {
+    return this.isAuthenticatedFlag;
+  }
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+  logout(): void {
+    this.isAuthenticatedFlag = false;
+    this.router.navigate(['/public']);
+  }
+}
 
-## Further help
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Guardia de Autenticación
+Implementado en src/app/guards/auth.guard.ts para proteger las rutas basadas en el estado de autenticación.
+
+auth.guard.ts
+export class AuthGuard implements CanActivate {
+  constructor(private authService: AuthService, private router: Router) {}
+
+  canActivate(): boolean {
+    if (this.authService.isAuthenticated()) {
+      return true;
+    } else {
+      this.router.navigate(['/public']);
+      return false;
+    }
+  }
+}
+
+
+Configuración de Rutas
+Configurado en src/app/app-routing.module.ts para definir rutas públicas y protegidas.
+
+app-routing.module.ts
+const routes: Routes = [
+  { path: 'public', component: PublicComponent },
+  { path: 'protected', component: ProtectedComponent, canActivate: [AuthGuard] },
+  { path: '', redirectTo: '/public', pathMatch: 'full' },
+  { path: '**', redirectTo: '/public' }
+];
+
+
+Navegación en el Componente Principal
+El componente principal maneja la navegación y el estado de autenticación.
+
+app.component.html
+<nav>
+  <a *ngIf="authService.isAuthenticated()" routerLink="/protected" routerLinkActive="active">Protected</a>
+  <a *ngIf="authService.isAuthenticated()" (click)="logout()">Logout</a>
+</nav>
+<router-outlet></router-outlet>
+
+app.component.ts
+export class AppComponent {
+  constructor(public authService: AuthService) {}
+
+  logout() {
+    this.authService.logout();
+  }
+}
+
+
+Implementación del Formulario de Inicio de Sesión
+El formulario de inicio de sesión permite a los usuarios autenticarse y acceder a rutas protegidas.
+
+public.component.ts
+export class PublicComponent {
+  username: string = '';
+  password: string = '';
+  errorMessage: string = '';
+
+  constructor(private authService: AuthService, private router: Router) {}
+
+  onSubmit(): void {
+    this.authService.login(this.username, this.password).subscribe(
+      success => {
+        if (success) {
+          this.router.navigate(['/protected']);
+        } else {
+          this.errorMessage = 'Invalid credentials';
+        }
+      }
+    );
+  }
+}
+
+public.component.html
+<h1>Public Page</h1>
+<p>This is a public page accessible to all users.</p>
+
+<form (submit)="onSubmit()">
+  <label for="username">Username:</label>
+  <input type="text" id="username" [(ngModel)]="username" name="username" required>
+
+  <label for="password">Password:</label>
+  <input type="password" id="password" [(ngModel)]="password" name="password" required>
+
+  <button type="submit">Login</button>
+</form>
+<p *ngIf="errorMessage">{{ errorMessage }}</p>
+
+
+
+Uso
+Iniciar el servidor:
+    ng serve
+
+Navegar a la aplicación:
+Abre http://localhost:4200 en tu navegador.
+
+Iniciar sesión:
+Implementa un formulario de inicio de sesión en PublicComponent para establecer el token y navegar a rutas protegidas.
+
+Cerrar sesión:
+Utiliza el enlace de logout para cerrar la sesión y volver a la página pública.

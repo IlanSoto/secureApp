@@ -1,0 +1,40 @@
+form {
+    max-width: 300px;
+    margin: auto;
+    padding: 1em;
+    background: #f9f9f9;
+    border: 1px solid #c1c1c1;
+    border-radius: 5px;
+  }
+  
+  label {
+    margin-top: 1em;
+    display: block;
+  }
+  
+  input {
+    width: 100%;
+    padding: 0.5em;
+    margin-top: 0.5em;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+  }
+  
+  button {
+    margin-top: 1em;
+    padding: 0.7em;
+    color: #fff;
+    background-color: #4CAF50;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  
+  button:hover {
+    background-color: #45a049;
+  }
+  
+  p {
+    color: red;
+  }
+  
